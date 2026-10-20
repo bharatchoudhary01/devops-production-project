@@ -1,4 +1,5 @@
 
+
 name: DevOps CI Pipeline
 
 on:
@@ -11,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  build-test-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,7 +38,6 @@ jobs:
       - name: Test application health endpoint
         run: |
           docker run -d --name app-test -p 127.0.0.1:5000:5000 devops-production-app:ci
-
           for i in $(seq 1 10); do
             if curl -fsS http://127.0.0.1:5000/health; then
               docker rm -f app-test
@@ -45,8 +45,23 @@ jobs:
             fi
             sleep 2
           done
-
           docker logs app-test
           docker rm -f app-test
           exit 1
 
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/devops-production-app:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/devops-production-app:${{ github.sha }}
