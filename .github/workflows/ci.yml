@@ -33,3 +33,20 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t devops-production-app:ci .
+
+      - name: Test application health endpoint
+        run: |
+          docker run -d --name app-test -p 127.0.0.1:5000:5000 devops-production-app:ci
+
+          for i in $(seq 1 10); do
+            if curl -fsS http://127.0.0.1:5000/health; then
+              docker rm -f app-test
+              exit 0
+            fi
+            sleep 2
+          done
+
+          docker logs app-test
+          docker rm -f app-test
+          exit 1
+
