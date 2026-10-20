@@ -1,5 +1,4 @@
 
-
 name: DevOps CI Pipeline
 
 on:
@@ -49,6 +48,22 @@ jobs:
           docker rm -f app-test
           exit 1
 
+      - name: Check Docker Hub secrets
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ -z "$DOCKERHUB_USERNAME" ]; then
+            echo "DOCKERHUB_USERNAME is missing"
+            exit 1
+          fi
+          if [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "DOCKERHUB_TOKEN is missing"
+            exit 1
+          fi
+          echo "Both Docker Hub secrets are available"
+
       - name: Log in to Docker Hub
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
@@ -65,3 +80,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/devops-production-app:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/devops-production-app:${{ github.sha }}
+
+
+
+        
