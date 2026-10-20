@@ -51,15 +51,15 @@ jobs:
       - name: Check Docker Hub secrets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          DH_USERNAME: ${{ secrets.DH_USERNAME }}
+          DH_ACCESS_TOKEN: ${{ secrets.DH_ACCESS_TOKEN }}
         run: |
-          if [ -z "$DOCKERHUB_USERNAME" ]; then
-            echo "DOCKERHUB_USERNAME is missing"
+          if [ -z "$DH_USERNAME" ]; then
+            echo "DH_USERNAME is missing"
             exit 1
           fi
-          if [ -z "$DOCKERHUB_TOKEN" ]; then
-            echo "DOCKERHUB_TOKEN is missing"
+          if [ -z "$DH_ACCESS_TOKEN" ]; then
+            echo "DH_ACCESS_TOKEN is missing"
             exit 1
           fi
           echo "Both Docker Hub secrets are available"
@@ -68,8 +68,8 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DH_USERNAME }}
+          password: ${{ secrets.DH_ACCESS_TOKEN }}
 
       - name: Build and push Docker image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -78,9 +78,5 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/devops-production-app:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/devops-production-app:${{ github.sha }}
-
-
-
-        
+            ${{ secrets.DH_USERNAME }}/devops-production-app:latest
+            ${{ secrets.DH_USERNAME }}/devops-production-app:${{ github.sha }}
